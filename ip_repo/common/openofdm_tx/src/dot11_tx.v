@@ -2,7 +2,31 @@
  * dot11_tx - TODO
  *
  * Michael Tetemke Mehari mehari.michael@gmail.com
- */
+
+Compared to the orginal dot11_tx.v module, this implementation has been modified so to welcome these main further mechanisms
+
+1. input wire [127:0] mask 
+    -> defined to receive from the driver the user_defined obfuscation coefficients
+
+2. 
+
+wire [31:0] shifted_ifft_iq;
+wire [1:0]  curr_coeff;
+
+//aux regs
+wire [31:0] iq_DivBy2;
+wire [31:0] iq_DivBy4;
+wire [31:0] iq_DivBy8;
+
+-> used to apply the shifting/obsfuscation logic on data symbols in frequency domain before being passed to the IFFT
+NB: notice how shifted_ifft_iq is initialized before being provided as input to the IFFT
+".i_sample(shifted_ifft_iq),"
+
+3. Instantiation of a ltf_generator module and definition of all reg & wires necessary to control its lifecycle
+
+4. Modifications to the FSM3 logic to replace the standard LTF generation logic with the one embedded in the ltf_generation module
+*/
+
 
 module dot11_tx
 (
@@ -22,8 +46,11 @@ module dot11_tx
   input  wire        result_iq_ready,
   output wire        result_iq_valid,
   output wire [15:0] result_i,
-  output wire [15:0] result_q
+  output wire [15:0] result_q, 
+  input wire [127:0] mask
 );
+
+
 
 reg  FSM3_reset;        // Reset after transmiting a whole packet
 wire reset_int = phy_tx_arest | FSM3_reset;
@@ -432,6 +459,15 @@ wire [31:0] DC_SB_IQ = {16'h0000, 16'h0000};
 //////////////////////////////////////////////////////////////////////////
 reg [31:0] ifft_iq;
 reg [7:0]  iq_cnt;
+wire [31:0] shifted_ifft_iq;
+wire [1:0]  curr_coeff;
+
+//aux regs
+wire [31:0] iq_DivBy2;
+wire [31:0] iq_DivBy4;
+wire [31:0] iq_DivBy8;
+
+
 always @* begin
     ifft_iq = 0;
     if(state2 == S2_MOD_IFFT_INPUT) begin
@@ -454,13 +490,27 @@ always @* begin
     end
 end
 
+assign curr_coeff = mask[(iq_cnt * 2) +: 2];
+assign iq_DivBy2 = {ifft_iq[31], ifft_iq[31:17], ifft_iq[15], ifft_iq[15:1]};
+assign iq_DivBy4 = {ifft_iq[31], ifft_iq[31], ifft_iq[31:18], ifft_iq[15], ifft_iq[15], ifft_iq[15:2]};
+assign iq_DivBy8 = {ifft_iq[31], ifft_iq[31], ifft_iq[31], ifft_iq[31:19], ifft_iq[15], ifft_iq[15], ifft_iq[15], ifft_iq[15:3]};
+
+
+// Apply Shift on ifft_iq before providing it as input (i_sample) to the IFFT
+assign shifted_ifft_iq = 
+(curr_coeff == 2'b00)? ifft_iq : 
+(curr_coeff == 2'b01)? iq_DivBy8 : 
+(curr_coeff == 2'b10)? iq_DivBy2 : 
+(curr_coeff == 2'b11)? iq_DivBy4 :
+ 32'bx;
+
 reg         ifft_ce;
 wire        ifft_o_sync;
 wire [31:0] ifft_o_result;
 ifftmain ifft64(
     .i_clk(clk), .i_reset(reset_int),
     .i_ce(ifft_ce),
-    .i_sample(ifft_iq),
+    .i_sample(shifted_ifft_iq),
     .o_result(ifft_o_result),
     .o_sync(ifft_o_sync)
 );
@@ -710,6 +760,19 @@ end else begin
     end
 end
 
+/*Reg & Wires to control our LTF generator*/
+reg ltf_start;
+wire[31:0] ans_ltf_output;
+wire LTFstarted;
+reg ans_LTFoutput_in_progress;
+wire ans_LTF_valid;
+
+
+ltf_generator ltf_gen (.clk(clk), .reset(reset_int), .letsgo(ltf_start),
+ .coefficients(mask),
+.ltfsequence(ans_ltf_output), .LTFstarted(LTFstarted));
+
+
 //////////////////////////////////////////////////////////////////////////
 // DOT11 TX FINITE STATE MACHINE 3
 //////////////////////////////////////////////////////////////////////////
@@ -727,12 +790,16 @@ end else if(result_iq_ready == 1) begin
         if(phy_tx_start) begin
             preamble_addr <= 0;
             state3 <= S3_L_STF;
+            //LET ALSO FSM4 START RUNNING 
+            ltf_start <= 1;
+            ans_LTFoutput_in_progress <= 0;
         end
     end
 
     S3_L_STF: begin
         // Legacy short preamble contains 10*16 = 160 samples
         if(preamble_addr < 159) begin
+            ltf_start <= 0;
             preamble_addr <= preamble_addr + 1;
         end else begin
             preamble_addr <= 0;
@@ -747,12 +814,17 @@ end else if(result_iq_ready == 1) begin
     end
 
     S3_L_LTF: begin
-        // Legacy long preamble contains 160 samples
-        if(preamble_addr < 159) begin
-            preamble_addr <= preamble_addr + 1;
-
-        end else begin
-            state3 <= S3_L_SIG;
+        if (LTFstarted)
+            ans_LTFoutput_in_progress <= 1;
+        
+        if (ans_LTF_valid) begin
+            if(preamble_addr < 159) begin
+                preamble_addr <= preamble_addr + 1;
+    
+            end else begin
+                ans_LTFoutput_in_progress <= 0;
+                state3 <= S3_L_SIG;
+            end
         end
     end
 
@@ -803,8 +875,10 @@ end else if(result_iq_ready == 1) begin
     endcase
 end
 
-assign result_i        = state3 == S3_L_STF ? l_stf[31:16] : (state3 == S3_L_LTF ? l_ltf[31:16] : (state3 == S3_HT_STF ? ht_stf[31:16] : (state3 == S3_HT_LTF ? ht_ltf[31:16] : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[31:16] : CP_fifo_odata[31:16]))));
-assign result_q        = state3 == S3_L_STF ? l_stf[15:0]  : (state3 == S3_L_LTF ? l_ltf[15:0]  : (state3 == S3_HT_STF ? ht_stf[15:0]  : (state3 == S3_HT_LTF ? ht_ltf[15:0]  : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[15:0]  : CP_fifo_odata[15:0]))));
-assign result_iq_valid = state3 == S3_L_STF || state3 == S3_L_LTF || state3 == S3_HT_STF || state3 == S3_HT_LTF ? 1 : (fifo_turn == PKT_FIFO ? pkt_fifo_ovalid : CP_fifo_ovalid);
+assign ans_LTF_valid = LTFstarted || ans_LTFoutput_in_progress;
+
+assign result_i        = state3 == S3_L_STF ? l_stf[31:16] : (state3 == S3_L_LTF && ans_LTF_valid ? ans_ltf_output[31:16] : (state3 == S3_HT_STF ? ht_stf[31:16] : (state3 == S3_HT_LTF ? ht_ltf[31:16] : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[31:16] : CP_fifo_odata[31:16]))));
+assign result_q        = state3 == S3_L_STF ? l_stf[15:0]  : (state3 == S3_L_LTF && ans_LTF_valid ? ans_ltf_output[15:0]  : (state3 == S3_HT_STF ? ht_stf[15:0]  : (state3 == S3_HT_LTF ? ht_ltf[15:0]  : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[15:0]  : CP_fifo_odata[15:0]))));
+assign result_iq_valid = state3 == S3_L_STF || (state3 == S3_L_LTF &&  ans_LTF_valid) || state3 == S3_HT_STF || state3 == S3_HT_LTF ? 1 : (fifo_turn == PKT_FIFO ? pkt_fifo_ovalid : CP_fifo_ovalid);
 
 endmodule
