@@ -53,11 +53,11 @@ module openofdm_tx #
     wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg0;
     wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg1;
     wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg2;
+    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg3;
+    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg4;
+    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg5;
+    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg6;
     /*
-    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg3; //
-    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg4; //
-    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg5; //
-    wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg6; //
     wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg7; //
     wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg8;
     wire [(C_S00_AXI_DATA_WIDTH-1):0] slv_reg9; //
@@ -103,10 +103,10 @@ dot11_tx dot11_tx (
     .result_iq_ready(~result_iq_hold),
     .result_iq_valid(result_iq_valid),
     .result_i(result_i),
-    .result_q(result_q)
+    .result_q(result_q),
+    //Pass the obfuscation mask to dot11_tx 
+    .mask({slv_reg6[31:0], slv_reg5[31:0], slv_reg4[31:0], slv_reg3[31:0]})
 );
-
-//assign bram_wen = 0;
 
 openofdm_tx_s_axi # (
         .C_S_AXI_DATA_WIDTH(C_S00_AXI_DATA_WIDTH),
@@ -136,11 +136,11 @@ openofdm_tx_s_axi # (
 
         .SLV_REG0(slv_reg0),
         .SLV_REG1(slv_reg1),
-        .SLV_REG2(slv_reg2), /*,
+        .SLV_REG2(slv_reg2),
         .SLV_REG3(slv_reg3),
         .SLV_REG4(slv_reg4),
         .SLV_REG5(slv_reg5),
-        .SLV_REG6(slv_reg6),
+        .SLV_REG6(slv_reg6), /*,
         .SLV_REG7(slv_reg7),
         .SLV_REG8(slv_reg8),
         .SLV_REG9(slv_reg9),

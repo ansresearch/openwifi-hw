@@ -18,7 +18,7 @@ wire signed [15:0] result_q;
 
 integer result_fd;
 
-reg [63:0] Memory [0:99];
+reg [63:0] Memory [0:199];
 initial begin
     $dumpfile("dot11_tx.vcd");
     $dumpvars;
@@ -73,7 +73,11 @@ dot11_tx dot11_tx_inst (
     .result_iq_ready(1'b1),
     .result_iq_valid(result_iq_valid),
     .result_i(result_i),
-    .result_q(result_q)
+    .result_q(result_q),
+    .mask(128'd0)
+    // Other examples of possible mask values
+    //.mask(128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
+    //.mask(128'hFFFFC)
 );
 
 endmodule
