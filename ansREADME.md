@@ -14,7 +14,7 @@ capability of the system.
 We implemented a CSI fuzzer so to obfuscate those properties of the CSI
 that an advanced attacker could use, without authorization, to localize a user in an indoor environment.
 
-In [this fork](https://github.com/ansresearch/openwifi-hw/tree/CSIobfuscation) of the [openwifi-hw project](https://github.com/open-sdr/openwifi-hw) we implemented the FPGA's side of our CSI fuzzer.
+In [this fork](https://github.com/ansresearch/openwifi-hw/tree/csiobfuscation-ans) of the [openwifi-hw project](https://github.com/open-sdr/openwifi-hw) we implemented the FPGA's side of our CSI fuzzer.
 
 ## Main modifications compared to the original project
 
