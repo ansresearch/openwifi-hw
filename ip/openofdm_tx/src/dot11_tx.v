@@ -2,6 +2,8 @@
  * dot11_tx - TODO
  *
  * Michael Tetemke Mehari mehari.michael@gmail.com
+ * Xianjun Jiao xianjun.jiao@ugent.be
+ */
 
 Compared to the orginal dot11_tx.v module, this implementation has been modified so to welcome these main further mechanisms
 
