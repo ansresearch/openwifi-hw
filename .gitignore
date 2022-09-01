@@ -33,3 +33,6 @@ ip/**/has_side_ch_flag.v
 
 ansREADME.pdf
 ip/openofdm_tx/ans_openofdm.tcl
+
+boards/zc706_fmcs2/sdk/system_top_hw_platform_0/system.hdf
+boards/zc706_fmcs2/sdk/system_top_hw_platform_0/system_top.bit
