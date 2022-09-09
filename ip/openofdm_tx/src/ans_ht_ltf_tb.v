@@ -11,10 +11,11 @@ module ht_ltf_tb;
     
     reg thereisoutput;
     reg [7:0] outputlength;
+    reg readyforoutput;
     
     reg [2:0] txcnt;
 
-ans_ht_ltf_generator UUT (.clk(clk), .reset(reset), .letsgo(bootLTFgen),
+ans_ht_ltf_generator UUT (.clk(clk), .reset(reset), .letsgo(bootLTFgen), .givemeoutput(readyforoutput),
 .obf_coeff(mycoefficients),
 .ans_ht_ltf(exportToDot11), .ans_ht_ltf_started(LTFstarted));
 
@@ -30,13 +31,15 @@ initial begin
     $dumpvars;
     
     txcnt = 0;
-    
+
     clk = 0;
     logfile=$fopen("/home/xilinx/LORENZO/ht_ltf_log.txt","w");
     outfile=$fopen("/home/xilinx/LORENZO/ht_ltf_out.txt","w");
     
     thereisoutput = 0;
     outputlength = 0;
+    readyforoutput = 0;
+    
     //mycoefficients = 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; //128bit set to 1
     mycoefficients = 128'd0; //128bit set to 0
     //mycoefficients = {112'd0, 16'b0000_0101_1010_1111};
@@ -51,6 +54,7 @@ initial begin
     #5;
     bootLTFgen = 0;
     #1700;
+    readyforoutput = 1;
     
 //    //RUN 1
 //    reset = 1;
@@ -98,6 +102,7 @@ always @(posedge clk) begin
         txcnt <= txcnt + 1;
         thereisoutput <= 0;
         outputlength <= 0;
+        readyforoutput <= 0;
     end
     
     if (txcnt > 2) begin

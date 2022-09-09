@@ -89,15 +89,26 @@ these latter are written right below the main ''always'' block.
 */
 
 module ans_ht_ltf_generator(
-    input wire clk, reset, letsgo,
+    input wire clk, reset, letsgo, givemeoutput,
     input [127:0] obf_coeff,
     output wire[31:0] ans_ht_ltf, wire ans_ht_ltf_started 
 );
+
+// states of the ans_ht_ltf_gen FSM
+reg[2:0] stateX = 0;
+localparam S_IDLE              = 0;
+localparam S_LOADING           = 1;
+localparam S_WAITIFFT          = 2;
+localparam S_WAITREADY4OUT     = 3;
+localparam S_IFFT2FIFO         = 4;
+localparam S_RECYCLE16         = 5;
 
 // Wiring with our custom ans_ht_ltf_rom
 wire [31:0] ht_ltf_freqrom;
 wire [31:0] ans_ht_ltf_shifted;
 reg[6:0] progress_cnt;
+
+reg [31:0] tmpOutput;
 
 ans_ht_ltf_rom freqROM (.addr(progress_cnt), .dout(ht_ltf_freqrom));
 
@@ -128,14 +139,6 @@ axi_fifo_bram #(.WIDTH(32), .SIZE(11)) ourFIFO(.clk(clk), .reset(reset), .clear(
  .o_tdata(fifo_odata), .o_tvalid(fifo_ovalid), .o_tready(fifo_oready),
  .space(fifo_space), .occupied()
 );
-
-// states of the ans_ht_ltf_gen FSM
-reg[2:0] stateX = 0;
-localparam S_IDLE              = 0;
-localparam S_LOADING           = 1;
-localparam S_WAITIFFT          = 2;
-localparam S_IFFT2FIFO         = 3;
-localparam S_RECYCLE16         = 4;
 
 //////////////////////////////////////////////////////////////////////////
 // HT-LTF generator FINITE STATE MACHINE
@@ -174,15 +177,25 @@ case(stateX)
     
     S_WAITIFFT: begin
         if (ifft_osync) begin
-            progress_cnt <= 1;
-            //progress already one cause
-            //with o_sync asserted we already load first sample into FIFO
-            stateX <= S_IFFT2FIFO;
+            ifft_ce <= 0;
+            tmpOutput <= ifft_result;
+            stateX <= S_WAITREADY4OUT;
         end
     end
     
+     S_WAITREADY4OUT: begin
+        if (givemeoutput) begin
+            progress_cnt <= 0;
+            stateX <= S_IFFT2FIFO;
+        end
+     end
+        
+
     S_IFFT2FIFO: begin
-        if (progress_cnt < 63) begin           
+        if (progress_cnt < 1) begin
+             ifft_ce <= 1; // enable progress of output
+        end
+        if (progress_cnt < 63) begin       
             progress_cnt <= progress_cnt + 1;
         end else begin
             progress_cnt <= 0;
@@ -228,11 +241,12 @@ assign ans_ht_ltf_shifted =
 assign ifft_input = (stateX == S_LOADING) ? ans_ht_ltf_shifted : 32'bx;
 
 /* Accept input and set input for ourFIFO in 2 moments: 
-    1. when o_sync is true (first sample)
-    2. During IFFT2FIFO redirect ifft_result to ourFIFO.input
+    1. when transition from S_WAITREADY4OUT to IFFT2FIFO (first sample)
+    2. During IFFT2FIFO (always redirect ifft_result to ourFIFO.input)
 */
-assign fifo_ivalid = ((stateX == S_WAITIFFT && ifft_osync) || stateX == S_IFFT2FIFO) ? 1 : 0;
-assign fifo_idata  = ((stateX == S_WAITIFFT && ifft_osync) || stateX == S_IFFT2FIFO) ? ifft_result : 32'bx;
+assign fifo_ivalid = (stateX == S_IFFT2FIFO) ? 1 : 0;
+assign fifo_idata  = (stateX == S_IFFT2FIFO && progress_cnt < 1) ? tmpOutput :
+                     (stateX == S_IFFT2FIFO && progress_cnt > 0) ? ifft_result : 32'bx;
 
 // We are interested in the output of ourFIFO only during S_RECYCLE16, 
 // because during that state what comes out of the FIFO is used for building the LTF sequence
@@ -243,10 +257,12 @@ assign fifo_oready = (stateX == S_RECYCLE16) ? 1 : 0;
     1. With the first 64 symbols provided by ourIFFT (written in ifft_result) that we have available when o_sync is asserted and during S_IFFT2FIFO
     2. The rest of the ht-ltf sequence is extracted from ourFIFO used as a circular buffer
 */
-assign ans_ht_ltf = ((stateX == S_WAITIFFT && ifft_osync) || stateX == S_IFFT2FIFO) ? ifft_result : (stateX == S_RECYCLE16) ? fifo_odata : 32'bx;
+assign ans_ht_ltf = (stateX == S_IFFT2FIFO && progress_cnt < 1) ? tmpOutput :
+                    (stateX == S_IFFT2FIFO && progress_cnt > 0) ? ifft_result :
+                    (stateX == S_RECYCLE16) ? fifo_odata : 32'bx;
 
 //We raise this flag to let the FSM3 in dot11_tx.v module understand when it's time to subscribe to
 //the output coming out from this ltf_generator module
-assign ans_ht_ltf_started = (stateX == S_WAITIFFT && ifft_osync) ? 1 : 0;
+assign ans_ht_ltf_started = (stateX == S_IFFT2FIFO) ? 1 : 0;
 
 endmodule
