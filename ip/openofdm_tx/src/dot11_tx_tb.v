@@ -23,8 +23,8 @@ initial begin
     $dumpfile("dot11_tx.vcd");
     $dumpvars;
 
-    $readmemh("../../../../../unit_test/test_vec/tx_intf.mem", Memory);
-//    $readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte100.mem", Memory);
+    //$readmemh("../../../../../unit_test/test_vec/tx_intf.mem", Memory);
+    $readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte100.mem", Memory);
     //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte8176.mem", Memory);
 
     result_fd = $fopen("dot11_tx.txt", "w");

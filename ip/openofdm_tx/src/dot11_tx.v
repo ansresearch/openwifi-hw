@@ -1,10 +1,4 @@
 /*
- * dot11_tx - TODO
- *
- * Michael Tetemke Mehari mehari.michael@gmail.com
- * Xianjun Jiao xianjun.jiao@ugent.be
- */
-
 Compared to the orginal dot11_tx.v module, this implementation has been modified so to welcome these main further mechanisms
 
 1. input wire [127:0] mask 
@@ -54,6 +48,43 @@ module dot11_tx
 
 reg  FSM3_reset;        // Reset after transmiting a whole packet
 wire reset_int = phy_tx_arest | FSM3_reset;
+
+/*Reg & Wires to control ANS L-LTF generator*/
+reg ltf_start;
+wire[31:0] ans_l_ltf;
+wire LTFstarted;
+reg ans_LTFoutput_in_progress;
+wire ans_LTF_valid;
+
+ltf_generator ltf_gen (
+    .clk(clk), .reset(reset_int), .letsgo(ltf_start),
+    .coefficients(mask),
+    .ltfsequence(ans_l_ltf), .LTFstarted(LTFstarted));
+    
+/*Reg & Wires to control ANS HT-STF generator*/    
+reg ht_stf_start;
+reg ht_stf_startOut;
+wire[31:0] ans_ht_stf;
+wire HTSTFstarted;
+
+ans_ht_stf_generator ht_stf_gen (
+.clk(clk), .reset(reset_int), .letsgo(ht_stf_start), .givemeoutput(ht_stf_startOut),
+.obf_coeff(mask),
+.ans_ht_stf(ans_ht_stf), .ans_ht_stf_started(HTSTFstarted));
+
+
+/*Reg & Wires to control ANS HT-LTF generator*/    
+reg ht_ltf_start;
+reg ht_ltf_startOut;
+wire[31:0] ans_ht_ltf;
+wire HTLTFstarted;
+
+ans_ht_ltf_generator ht_ltf_gen (
+.clk(clk), .reset(reset_int), .letsgo(ht_ltf_start), .givemeoutput(ht_ltf_startOut),
+.obf_coeff(mask),
+.ans_ht_ltf(ans_ht_ltf), .ans_ht_ltf_started(HTLTFstarted));
+
+
 
 // Data collection states
 reg [1:0] state1;
@@ -106,32 +137,32 @@ reg [14:0] ofdm_cnt_FSM1;       // Maximum number of OFDM symbols = 3 + ceil((16
 // LEGACY SHORT + LONG PREAMBLE
 //////////////////////////////////////////////////////////////////////////
 wire [31:0] l_stf;
-wire [31:0] l_ltf;
+//wire [31:0] l_ltf;
 reg  [7:0] preamble_addr;
 l_stf_rom l_stf_rom (
     .addr(preamble_addr[3:0]),
     .dout(l_stf)
 );
 
-l_ltf_rom l_ltf_rom (
-    .addr(preamble_addr),
-    .dout(l_ltf)
-);
+//l_ltf_rom l_ltf_rom (
+//    .addr(preamble_addr),
+//    .dout(l_ltf)
+//);
 
 //////////////////////////////////////////////////////////////////////////
 // HT SHORT + LONG PREAMBLE
 //////////////////////////////////////////////////////////////////////////
-wire [31:0] ht_stf;
-wire [31:0] ht_ltf;
-ht_stf_rom ht_stf_rom (
-    .addr(preamble_addr[3:0]),
-    .dout(ht_stf)
-);
+//wire [31:0] ht_stf;
+//wire [31:0] ht_ltf;
+//ht_stf_rom ht_stf_rom (
+//    .addr(preamble_addr[3:0]),
+//    .dout(ht_stf)
+//);
 
-ht_ltf_rom ht_ltf_rom (
-    .addr(preamble_addr[6:0]),
-    .dout(ht_ltf)
-);
+//ht_ltf_rom ht_ltf_rom (
+//    .addr(preamble_addr[6:0]),
+//    .dout(ht_ltf)
+//);
 
 //////////////////////////////////////////////////////////////////////////
 // Cyclic redundancy check (CRC32) and frame check sequence (FCS) block
@@ -777,18 +808,6 @@ end else begin
     end
 end
 
-/*Reg & Wires to control our LTF generator*/
-reg ltf_start;
-wire[31:0] ans_ltf_output;
-wire LTFstarted;
-reg ans_LTFoutput_in_progress;
-wire ans_LTF_valid;
-
-
-ltf_generator ltf_gen (.clk(clk), .reset(reset_int), .letsgo(ltf_start),
- .coefficients(mask),
-.ltfsequence(ans_ltf_output), .LTFstarted(LTFstarted));
-
 
 //////////////////////////////////////////////////////////////////////////
 // DOT11 TX FINITE STATE MACHINE 3
@@ -809,6 +828,8 @@ end else if(result_iq_ready == 1) begin
             state3 <= S3_L_STF;
             //LET ALSO FSM4 START RUNNING 
             ltf_start <= 1;
+            ht_stf_start <= 1;
+            ht_ltf_start <= 1;
             ans_LTFoutput_in_progress <= 0;
         end
     end
@@ -858,7 +879,11 @@ end else if(result_iq_ready == 1) begin
 
     S3_HT_SIG: begin
         // HT SIGNAL contains 160 samples
+        if(pkt_iq_sent == 510) begin
+           ht_stf_startOut <= 1; 
+        end
         if(pkt_iq_sent == 511 && CP_iq_sent == 48) begin
+            // switch to HT_STF and ask output to ht_stf_gen!
             preamble_addr <= 0;
             state3 <= S3_HT_STF;
         end
@@ -868,7 +893,11 @@ end else if(result_iq_ready == 1) begin
         // HT short preamble contains 5*16 = 80 samples
         if(preamble_addr < 79) begin
             preamble_addr <= preamble_addr + 1;
+            if (preamble_addr == 78) begin
+                 ht_ltf_startOut <= 1;
+            end
         end else begin
+            // switch to HT_LTF and ask output to ht_stf_gen!
             preamble_addr <= 0;
             state3 <= S3_HT_LTF;
         end
@@ -895,8 +924,19 @@ end
 
 assign ans_LTF_valid = LTFstarted || ans_LTFoutput_in_progress;
 
-assign result_i        = state3 == S3_L_STF ? l_stf[31:16] : (state3 == S3_L_LTF && ans_LTF_valid ? ans_ltf_output[31:16] : (state3 == S3_HT_STF ? ht_stf[31:16] : (state3 == S3_HT_LTF ? ht_ltf[31:16] : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[31:16] : CP_fifo_odata[31:16]))));
-assign result_q        = state3 == S3_L_STF ? l_stf[15:0]  : (state3 == S3_L_LTF && ans_LTF_valid ? ans_ltf_output[15:0]  : (state3 == S3_HT_STF ? ht_stf[15:0]  : (state3 == S3_HT_LTF ? ht_ltf[15:0]  : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[15:0]  : CP_fifo_odata[15:0]))));
-assign result_iq_valid = state3 == S3_L_STF || (state3 == S3_L_LTF &&  ans_LTF_valid) || state3 == S3_HT_STF || state3 == S3_HT_LTF ? 1 : (fifo_turn == PKT_FIFO ? pkt_fifo_ovalid : CP_fifo_ovalid);
+assign result_i        =  state3 == S3_L_STF ? l_stf[31:16] :
+                         (state3 == S3_L_LTF && ans_LTF_valid ? ans_l_ltf[31:16] :
+                         (state3 == S3_HT_STF ? ans_ht_stf[31:16] :
+                         (state3 == S3_HT_LTF ? ans_ht_ltf[31:16] :
+                         (fifo_turn == PKT_FIFO ? pkt_fifo_odata[31:16] : CP_fifo_odata[31:16]))));
+
+assign result_q        =  state3 == S3_L_STF ? l_stf[15:0]  :
+                         (state3 == S3_L_LTF && ans_LTF_valid ? ans_l_ltf[15:0]  :
+                         (state3 == S3_HT_STF ? ans_ht_stf[15:0]  :
+                         (state3 == S3_HT_LTF ? ans_ht_ltf[15:0]  :
+                         (fifo_turn == PKT_FIFO ? pkt_fifo_odata[15:0]  : CP_fifo_odata[15:0]))));
+
+assign result_iq_valid = state3 == S3_L_STF || (state3 == S3_L_LTF &&  ans_LTF_valid) || state3 == S3_HT_STF || state3 == S3_HT_LTF ? 1 :
+                         (fifo_turn == PKT_FIFO ? pkt_fifo_ovalid : CP_fifo_ovalid);
 
 endmodule
