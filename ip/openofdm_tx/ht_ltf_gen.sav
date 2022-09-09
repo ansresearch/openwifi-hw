@@ -1,0 +1,50 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Fri Sep  9 09:49:25 2022
+[*]
+[dumpfile] "/home/xilinx/LORENZO/openwifi-hw/ip/openofdm_tx/openofdm_tx/openofdm_tx.sim/sim_1/behav/xsim/ht_ltf_gen.vcd"
+[dumpfile_mtime] "Fri Sep  9 09:48:33 2022"
+[dumpfile_size] 905600
+[savefile] "/home/xilinx/LORENZO/openwifi-hw/ip/openofdm_tx/ht_ltf_gen.sav"
+[timestart] 1690790
+[size] 1860 989
+[pos] -1 -1
+*-13.000000 1715000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] ht_ltf_tb.
+[sst_width] 352
+[signals_width] 275
+[sst_expanded] 1
+[sst_vpaned_height] 206
+@28
+ht_ltf_tb.clk
+@24
+ht_ltf_tb.thereisoutput
+@200
+-
+@24
+ht_ltf_tb.UUT.stateX[2:0]
+@420
+ht_ltf_tb.UUT.S_IDLE
+ht_ltf_tb.UUT.S_LOADING
+ht_ltf_tb.UUT.S_WAITIFFT
+ht_ltf_tb.UUT.S_WAITREADY4OUT
+ht_ltf_tb.UUT.S_IFFT2FIFO
+ht_ltf_tb.UUT.S_RECYCLE16
+@200
+-
+@28
+ht_ltf_tb.UUT.ifft_ce
+ht_ltf_tb.UUT.ifft_osync
+@200
+-
+@22
+ht_ltf_tb.UUT.ifft_input[31:0]
+ht_ltf_tb.UUT.ifft_result[31:0]
+@28
+ht_ltf_tb.UUT.ans_ht_ltf_started
+@22
+ht_ltf_tb.exportToDot11[31:0]
+@29
+ht_ltf_tb.readyforoutput
+[pattern_trace] 1
+[pattern_trace] 0

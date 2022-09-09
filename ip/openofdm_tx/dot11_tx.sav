@@ -1,0 +1,66 @@
+[*]
+[*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
+[*] Fri Sep  9 13:34:02 2022
+[*]
+[dumpfile] "/home/xilinx/LORENZO/openwifi-hw/ip/openofdm_tx/openofdm_tx/openofdm_tx.sim/sim_1/behav/xsim/dot11_tx.vcd"
+[dumpfile_mtime] "Fri Sep  9 13:24:08 2022"
+[dumpfile_size] 10947175
+[savefile] "/home/xilinx/LORENZO/openwifi-hw/ip/openofdm_tx/dot11_tx.sav"
+[timestart] 8346170
+[size] 1860 989
+[pos] -1 -1
+*-14.000000 8422500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] dot11_tx_tb.
+[treeopen] dot11_tx_tb.dot11_tx_inst.
+[sst_width] 278
+[signals_width] 278
+[sst_expanded] 1
+[sst_vpaned_height] 245
+@28
+dot11_tx_tb.clock
+dot11_tx_tb.dot11_tx_inst.result_iq_valid
+@22
+dot11_tx_tb.result_i[15:0]
+@200
+-
+@22
+dot11_tx_tb.dot11_tx_inst.ht_stf_gen.ans_ht_stf[31:0]
+dot11_tx_tb.dot11_tx_inst.ht_ltf_gen.ans_ht_ltf[31:0]
+dot11_tx_tb.dot11_tx_inst.ltf_gen.ltfsequence[31:0]
+@200
+-
+@28
+dot11_tx_tb.dot11_tx_inst.ht_stf_startOut
+dot11_tx_tb.dot11_tx_inst.ht_ltf_startOut
+@200
+-
+@24
+dot11_tx_tb.dot11_tx_inst.state3[2:0]
+@420
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_WAIT_PKT
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_L_STF
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_L_LTF
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_L_SIG
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_HT_SIG
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_HT_STF
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_HT_LTF
+[color] 5
+dot11_tx_tb.dot11_tx_inst.S3_DATA
+@200
+-
+@24
+dot11_tx_tb.dot11_tx_inst.pkt_iq_sent[20:0]
+dot11_tx_tb.dot11_tx_inst.CP_iq_sent[18:0]
+@200
+-
+@25
+dot11_tx_tb.dot11_tx_inst.preamble_addr[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
