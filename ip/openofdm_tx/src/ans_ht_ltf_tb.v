@@ -46,6 +46,7 @@ initial begin
     
     
     //RUN 0
+    $fdisplay(logfile, "[%0t]: START RUN 0", $time);
     reset = 1;
     #5;
     reset = 0;
@@ -55,32 +56,42 @@ initial begin
     bootLTFgen = 0;
     #1700;
     readyforoutput = 1;
+    #1000;
     
 //    //RUN 1
-//    reset = 1;
-//    #5;
-//    reset = 0;
-//    #10;
-//    bootLTFgen = 1; 
-//    #5;
-//    bootLTFgen = 0;
-//    #1700;
+    $fdisplay(logfile, "[%0t]: START RUN 1", $time);
+    reset = 1;
+    #5;
+    reset = 0;
+    #5;
+    bootLTFgen = 1; 
+    #5;
+    bootLTFgen = 0;
+    #1700;
+    readyforoutput = 1;
+    #1000;
     
 //    //RUN 2
-//    reset = 1;
-//    #5;
-//    reset = 0;
-//    #10;
-//    bootLTFgen = 1; 
-//    #5;
-//    bootLTFgen = 0;
+    $fdisplay(logfile, "[%0t]: START RUN 2", $time);
+    reset = 1;
+    #5;
+    reset = 0;
+    #5;
+    bootLTFgen = 1; 
+    #5;
+    bootLTFgen = 0;
+    #1700;
+    readyforoutput = 1;
+    #1000;
     
 end
 
 always @(posedge clk) begin
 
-    if (LTFstarted)
+    if (LTFstarted) begin
         thereisoutput = 1;
+        //$fdisplay(logfile, "[%0t]: OUTPUT STARTED FROM RUN %d", $time, txcnt);
+    end
     
     if ((LTFstarted || thereisoutput) && outputlength < 80) 
     begin
@@ -94,9 +105,9 @@ always @(posedge clk) begin
     begin
         //GOOD POINT FOR RESET
         //reset = 1;
-        $display("[%0t]: END of #%d TRX", $time, txcnt);
-        $fdisplay(logfile, "[%0t]: END of #%d TRX", $time, txcnt);
-        $finish;
+        $display("[%0t]: END of TRX #%d", $time, txcnt);
+        $fdisplay(logfile, "[%0t]: END of TRX #%d", $time, txcnt);
+        //$finish;
         
         $fdisplay(outfile, "--------------------------------------------");
         txcnt <= txcnt + 1;

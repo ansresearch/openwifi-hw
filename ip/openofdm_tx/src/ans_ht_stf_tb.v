@@ -46,6 +46,7 @@ initial begin
     
     
     //RUN 0
+    $fdisplay(logfile, "[%0t]: START RUN 0", $time);
     reset = 1;
     #5;
     reset = 0;
@@ -55,25 +56,33 @@ initial begin
     boot = 0;
     #1700;
     readyforoutput = 1;
+    #1000;
     
-//    //RUN 1
-//    reset = 1;
-//    #5;
-//    reset = 0;
-//    #10;
-//    boot = 1; 
-//    #5;
-//    boot = 0;
-//    #1700;
+    //RUN 1
+    $fdisplay(logfile, "[%0t]: START RUN 1", $time);
+    reset = 1;
+    #5;
+    reset = 0;
+    #5;
+    boot = 1; 
+    #5;
+    boot = 0;
+    #1700;
+    readyforoutput = 1;
+    #1000;
     
-//    //RUN 2
-//    reset = 1;
-//    #5;
-//    reset = 0;
-//    #10;
-//    boot = 1; 
-//    #5;
-//    boot = 0;
+    //RUN 2
+    $fdisplay(logfile, "[%0t]: START RUN 2", $time);
+    reset = 1;
+    #5;
+    reset = 0;
+    #5;
+    boot = 1; 
+    #5;
+    boot = 0;
+    #1700;
+    readyforoutput = 1;
+    #1000;
     
 end
 
@@ -96,7 +105,7 @@ always @(posedge clk) begin
         //reset = 1;
         $display("[%0t]: END of #%d TRX", $time, txcnt);
         $fdisplay(logfile, "[%0t]: END of #%d TRX", $time, txcnt);
-        $finish;
+        //$finish;
         
         $fdisplay(outfile, "--------------------------------------------");
         txcnt <= txcnt + 1;
