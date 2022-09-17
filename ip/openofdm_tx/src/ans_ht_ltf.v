@@ -160,6 +160,7 @@ case(stateX)
         if(letsgo) begin
             ifft_ce <= 1;
             progress_cnt = 0;
+            tmpOutput = 32'bx;
             stateX <= S_LOADING;
         end
     end    

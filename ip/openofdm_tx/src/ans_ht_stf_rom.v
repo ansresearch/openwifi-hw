@@ -8,7 +8,7 @@ module ans_ht_stf_rom
   always @ *
     case (addr)
     
-    
+    /*
     0:	dout = 32'h0000_0000;   //Subcar = -32
 	1:	dout = 32'h0000_0000;   //Subcar = -31
 	2:	dout = 32'h0000_0000;   //Subcar = -30
@@ -73,8 +73,8 @@ module ans_ht_stf_rom
 	61:	dout = 32'h0000_0000;   //Subcar = 29
 	62:	dout = 32'h0000_0000;   //Subcar = 30
 	63:	dout = 32'h0000_0000;   //Subcar = 31
-	
-    /* SCALED ROM --> causes overflow :(
+	*/
+    //SCALED ROM
         0:      dout = 32'h0000_0000;   //Subcar = -32
         1:      dout = 32'h0000_0000;   //Subcar = -31
         2:      dout = 32'h0000_0000;   //Subcar = -30
@@ -139,7 +139,7 @@ module ans_ht_stf_rom
         61:     dout = 32'h0000_0000;   //Subcar = 29
         62:     dout = 32'h0000_0000;   //Subcar = 30
         63:     dout = 32'h0000_0000;   //Subcar = 31
-        */
+        
 
           default: dout = 32'h00000000;
     endcase

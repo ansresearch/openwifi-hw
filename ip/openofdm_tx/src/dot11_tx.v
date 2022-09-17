@@ -817,7 +817,10 @@ if (reset_int) begin
     preamble_addr <= 0;
     phy_tx_done <= 0;
     FSM3_reset <= 0;
-
+    
+    ht_stf_startOut <= 0;
+    ht_ltf_startOut <= 0;
+    
     state3 <= S3_WAIT_PKT;
 
 end else if(result_iq_ready == 1) begin
