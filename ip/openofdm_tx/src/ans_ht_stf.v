@@ -11,7 +11,7 @@ Similar logic of HT-LTF ... check ans_ht_ltf.v
 module ans_ht_stf_generator(
     input wire clk, reset, letsgo, givemeoutput,
     input [127:0] obf_coeff,
-    output wire[31:0] ans_ht_stf, wire ans_ht_stf_started 
+    output wire[31:0] outputscaledup, wire ans_ht_stf_started 
 );
 
 // states of the ans_ht_stf_gen FSM
@@ -27,6 +27,8 @@ localparam S_RECYCLE16         = 5;
 wire [31:0] ht_stf_freqrom;
 wire [31:0] ans_ht_stf_shifted;
 reg[6:0] progress_cnt;
+
+wire [31:0] ans_ht_stf;
 
 reg [31:0] tmpOutput;
 
@@ -182,6 +184,7 @@ assign ans_ht_stf = (stateX == S_IFFT2FIFO && progress_cnt < 1) ? tmpOutput :
                     (stateX == S_IFFT2FIFO && progress_cnt > 0) ? ifft_result :
                     (stateX == S_RECYCLE16) ? fifo_odata : 32'bx;
 
+assign outputscaledup = {ans_ht_stf[30:16], 1'b0, ans_ht_stf[14:0], 1'b0}; 
 //We raise this flag to let the FSM3 in dot11_tx.v module understand when it's time to subscribe to
 //the output coming out from this ltf_generator module
 assign ans_ht_stf_started = (stateX == S_IFFT2FIFO) ? 1 : 0;

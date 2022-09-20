@@ -37,7 +37,7 @@ module dot11_tx
   input  wire [6:0]  init_data_scram_state,
 
   input  wire [63:0] bram_din,
-  output reg  [9:0]  bram_addr,
+  output reg  [11:0]  bram_addr,
 
   input  wire        result_iq_ready,
   output wire        result_iq_valid,
@@ -60,7 +60,8 @@ ltf_generator ltf_gen (
     .clk(clk), .reset(reset_int), .letsgo(ltf_start),
     .coefficients(mask),
     .ltfsequence(ans_l_ltf), .LTFstarted(LTFstarted));
-    
+
+   
 /*Reg & Wires to control ANS HT-STF generator*/    
 reg ht_stf_start;
 reg ht_stf_startOut;
@@ -70,7 +71,7 @@ wire HTSTFstarted;
 ans_ht_stf_generator ht_stf_gen (
 .clk(clk), .reset(reset_int), .letsgo(ht_stf_start), .givemeoutput(ht_stf_startOut),
 .obf_coeff(mask),
-.ans_ht_stf(ans_ht_stf), .ans_ht_stf_started(HTSTFstarted));
+.outputscaledup(ans_ht_stf), .ans_ht_stf_started(HTSTFstarted));
 
 
 /*Reg & Wires to control ANS HT-LTF generator*/    

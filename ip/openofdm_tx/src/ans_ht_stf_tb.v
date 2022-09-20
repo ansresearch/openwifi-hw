@@ -17,7 +17,7 @@ module ht_stf_tb;
 
 ans_ht_stf_generator UUT (.clk(clk), .reset(reset), .letsgo(boot), .givemeoutput(readyforoutput),
 .obf_coeff(mycoefficients),
-.ans_ht_stf(exportToDot11), .ans_ht_stf_started(STFstarted));
+.outputscaledup(exportToDot11), .ans_ht_stf_started(STFstarted));
 
     integer logfile,outfile;
     
@@ -105,7 +105,7 @@ always @(posedge clk) begin
         //reset = 1;
         $display("[%0t]: END of #%d TRX", $time, txcnt);
         $fdisplay(logfile, "[%0t]: END of #%d TRX", $time, txcnt);
-        //$finish;
+        $finish;
         
         $fdisplay(outfile, "--------------------------------------------");
         txcnt <= txcnt + 1;
