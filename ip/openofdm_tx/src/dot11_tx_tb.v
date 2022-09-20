@@ -11,7 +11,7 @@ wire phy_tx_done;
 wire phy_tx_started;
 
 reg [63:0] bram_din;
-wire [9:0] bram_addr;
+wire [11:0] bram_addr;
 
 wire        result_iq_valid;
 wire signed [15:0] result_i;
@@ -20,15 +20,16 @@ wire signed [15:0] result_q;
 integer result_fd,f0,f1,f2;
 integer tmp,logfile;
 
-reg [63:0] Memory [0:1023];
+reg [63:0] Memory [0:4095];
 initial begin
     $dumpfile("dot11_tx.vcd");
     $dumpvars;
 
     //$readmemh("../../../../../unit_test/test_vec/tx_intf.mem", Memory);
-    //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs6_gi1_aggr0_byte100.mem", Memory);
+    //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte100.mem", Memory);
     //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte8176.mem", Memory);
-    $readmemh("../../../../../unit_test/test_vec/bramtest_mcs3_byte60.mem", Memory);
+    //$readmemh("../../../../../unit_test/test_vec/zz_bramtest_mcs4_byte100.mem", Memory);
+    $readmemh("../../../../../unit_test/test_vec/test_mcs3_len100byte_nosgi.mem", Memory);
     
     result_fd = $fopen("/home/xilinx/LORENZO/dot11_txANS.txt", "w");
     
