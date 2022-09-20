@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.3.86 (w)1999-2017 BSI
-[*] Sat Sep 17 08:41:02 2022
+[*] Mon Sep 19 13:39:44 2022
 [*]
 [dumpfile] "/home/xilinx/LORENZO/openwifi-hw/ip/openofdm_tx/openofdm_tx/openofdm_tx.sim/sim_1/behav/xsim/dot11_tx.vcd"
-[dumpfile_mtime] "Fri Sep 16 18:09:06 2022"
-[dumpfile_size] 12370736
+[dumpfile_mtime] "Mon Sep 19 13:31:53 2022"
+[dumpfile_size] 14501810
 [savefile] "/home/xilinx/LORENZO/openwifi-hw/ip/openofdm_tx/rate.sav"
-[timestart] 409530
-[size] 1860 1016
+[timestart] 131150
+[size] 1860 989
 [pos] -1 -1
-*-14.000000 457500 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-13.000000 146140 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] dot11_tx_tb.
 [sst_width] 233
 [signals_width] 405
@@ -49,17 +49,22 @@ dot11_tx_tb.dot11_tx_inst.S11_PAD
 dot11_tx_tb.dot11_tx_inst.S11_RESET
 @200
 -
-@22
+@23
 dot11_tx_tb.bram_din[63:0]
-@25
-dot11_tx_tb.bram_addr[9:0]
 @24
 dot11_tx_tb.dot11_tx_inst.plcp_bit_cnt[5:0]
 @28
+dot11_tx_tb.dot11_tx_inst.bram_din_last_nibble[3:0]
 dot11_tx_tb.dot11_tx_inst.RATE[4:0]
 dot11_tx_tb.dot11_tx_inst.PKT_TYPE
 @24
 dot11_tx_tb.dot11_tx_inst.PSDU_BIT_LEN[18:0]
+@28
+dot11_tx_tb.dot11_tx_inst.HT_AGGR
+dot11_tx_tb.dot11_tx_inst.S_GI
+@24
+dot11_tx_tb.dot11_tx_inst.PSDU_BIT_LEN[18:0]
+dot11_tx_tb.dot11_tx_inst.psdu_bit_cnt[18:0]
 @28
 dot11_tx_tb.dot11_tx_inst.HT_AGGR
 dot11_tx_tb.dot11_tx_inst.S_GI
