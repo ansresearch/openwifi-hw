@@ -137,14 +137,28 @@ reg [14:0] ofdm_cnt_FSM1;       // Maximum number of OFDM symbols = 3 + ceil((16
 //////////////////////////////////////////////////////////////////////////
 // LEGACY SHORT + LONG PREAMBLE
 //////////////////////////////////////////////////////////////////////////
-wire [31:0] l_stf;
-//wire [31:0] l_ltf;
+wire [31:0] l_stf_att;
+
 reg  [7:0] preamble_addr;
-l_stf_rom l_stf_rom (
+l_stf_rom_attenuated l_stf_rom_attenuated (
     .addr(preamble_addr[3:0]),
-    .dout(l_stf)
+    .dout(l_stf_att)
 );
 
+wire [31:0] l_stf_notAtt;
+l_stf_rom l_stf_rom (
+    .addr(preamble_addr[3:0]),
+    .dout(l_stf_notAtt)
+);
+
+wire [31:0] ans_l_stf;
+ans_l_stf_gen l_stf_gen (
+    .addr(preamble_addr % 16),
+    .symbol(ans_l_stf));
+
+wire [31:0] l_stf;
+
+//wire [31:0] l_ltf;
 //l_ltf_rom l_ltf_rom (
 //    .addr(preamble_addr),
 //    .dout(l_ltf)
@@ -926,6 +940,11 @@ end else if(result_iq_ready == 1) begin
     endcase
 end
 
+
+//assign l_stf = (state3 == S3_L_STF && mask == 128'b0) ? l_stf_notAtt :
+//                (state3 == S3_L_STF && mask != 128'b0) ? l_stf_att : 32'bx;
+assign l_stf = (state3 == S3_L_STF) ? ans_l_stf : 32'bx;
+                
 assign ans_LTF_valid = LTFstarted || ans_LTFoutput_in_progress;
 
 assign result_i        =  state3 == S3_L_STF ? l_stf[31:16] :

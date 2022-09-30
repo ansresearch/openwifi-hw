@@ -144,8 +144,8 @@ dot11_tx dot11_tx_inst (
     .result_i(result_i),
     .result_q(result_q),
     
-    //.mask(128'd0) // No Obf
-    .mask(128'h55555555555555555555555555555555) // 01 on all subcar => means divide by 8
+    .mask(128'd0) // No Obf
+    //.mask(128'h55555555555555555555555555555555) // 01 on all subcar => means divide by 8
     //.mask(128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // 10 on all subcar => means divide by 2
     //.mask(128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // 11 on all subcar => means divide by 4
     //.mask(128'hE4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E4) //11_10_01_00 repeated pattern 
