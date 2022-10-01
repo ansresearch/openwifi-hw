@@ -1,92 +1,4 @@
-/*
 
-STILL TO BE UPDATED TO BECOME AN HT-LTF GENERATOR
-
-A module used for generating the 80 (time) samples of the HT long preamble
-starting from the 802.11 standard (frequency) coefficients tabled in ans_ht_ltf_rom.v
-
-The standard (frequency) coefficient are manipulated according to the content of the register
-defined by this module as ''input [127:0] obf_coeff''
-
-This register stores a 2bits "multiplier-coefficient" for each of the 64 OFDM carrier (20MHz). 
-In fact, to implement our obsfuscation technique, selected carriers shall be either partially amplified or suppressed.
-Without obfuscation, the standard content extracted from ans_ht_ltf_rom (driven by the wire 'ht_ltf_freqrom'), 
-shall be converted to its time-domain representation applying the IFFT, however, if obfuscation is enabled, custom_ltf
-may be be further manipulated and may be:
-
-- divided by 2
-- divided by 4
-- divided by 8
-
-In light of this description the reader should notice that we always keep available 3 registers called, respectively, ltf_DivBy2, ltf_DivBy4 and ltf_DivBy8
-
-NB:
-assign ltf_DivBy2 = {ht_ltf_freqrom[31], ht_ltf_freqrom[31:17], ht_ltf_freqrom[15], ht_ltf_freqrom[15:1]};
-assign ltf_DivBy4 = {ht_ltf_freqrom[31], ht_ltf_freqrom[31], ht_ltf_freqrom[31:18], ht_ltf_freqrom[15], ht_ltf_freqrom[15], ht_ltf_freqrom[15:2]};
-assign ltf_DivBy8 = {ht_ltf_freqrom[31], ht_ltf_freqrom[31], ht_ltf_freqrom[31], ht_ltf_freqrom[31:19], ht_ltf_freqrom[15], ht_ltf_freqrom[15], ht_ltf_freqrom[15], ht_ltf_freqrom[15:3]};
-
-Which properly apply "Two's_complement" algebra on both the real and imaginary parts of custom_ltf which, indeed, is a 32-bits long register where the
-16 leftmost/rightmost bits denote, in Two's complement notation, the real and imaginary parts of a complex number.
-
-Summing up, each carrier is either left unchanged, divided by 2, 4 or 8 according to the 2-bits reserved for this carrier in "input [127:0] obf_coeff".
-The selected operation is reflected in the (internal) wire ans_ht_ltf_shifted that, according to the possible value (00, 01, 10, 11) of the related 2-bits,
-prepares the proper input for the IFFT block of this module.
-
-NB:
-assign ans_ht_ltf_shifted = 
-(stateX == S_LOADING && curr_coeff == 2'b00) ? custom_ltf : 
-(stateX == S_LOADING && curr_coeff == 2'b01) ? ltf_DivBy8 : 
-(stateX == S_LOADING && curr_coeff == 2'b10) ? ltf_DivBy2 : 
-(stateX == S_LOADING && curr_coeff == 2'b11) ? ltf_DivBy4
- : 32'bx;
-     
- 
-The rest of the module defines a State machine responsible for the generation of the 80 time-samples of the HT-LTF
-applying the obfuscation coefficients to the frequency represation of the HT-LTF as tabled in ans_ht_ltf_rom.v
-
-The state machine evolution follows this sequence of steps:
-
-0 -> S_IDLE
-Initially the FSM just waits for the signal (i.e., interrupt) that notifies the start of a new packet transmission.
-Indeed, the "letsgo" signal that enables the transition from S_IDLE to S_LOADING is asserted in the dot11_tx.v module
-when phy_tx_start gets asserted.
-
-1 -> S_LOADING
-In this state the FSM iterates over progress_cnt (which ranges from 0 to 63) and:
-- extract a standard coefficient from the ROM
-- applies the obfuscation multiplier and then provides the so obfuscated coefficient as input to an IFFT block (called in this module ourIfftBlock)
-
-Once this loading routine has been completed for all 64 carriers, then the FSM starts waiting for the output of the IFFT
-
-2 -> S_WAITIFFT
-The FSM remains in this state until ourIfftBlock starts providing output.
-In other terms, as soon as ourIfftBlock raises the ifft_osync signal, a signal which notifies the end of the IFFT computation and the start
-of the IFFT output generation: at this point then FSM transits to the S_IFFT2FIFO state.
-
-3 -> S_IFFT2FIFO
-According to the 802.11 standard, the HT-LTF is made by 64+16symbols...
-
-The first 64 symbols printed in output by ourIfftBlock are the first 64 samples of our obfuscated HT-LTF. 
-These same symbols can be recycled later to finish building the complete HT-LTF.
-For this reason, during S_IFFT2FIFO this module makes two main actions:
-    3.1) redirects the IFFT_output to a FIFO-bram (called ourFIFO)
-    3.2) starts already emitting output, redirecting the IFFT output on the output wire of this module, namely, 'output wire[31:0] ans_ht_ltf'
-
-Recap: After 64 clock ticks spent in state S_IFFT2FIFO, ourFIFO will be completely loaded with the first 64 symbols of the HT-LTF.
-These same 64 values will have been sent as output already over ans_ht_ltf.
-At this point the FSM transits to S_RECYCLE16 state.
-
-4 -> S_RECYCLE16
-Entering this state means that, to complete building the LTF sequence, the content of ourFIFO must be "circularly recycled" 16 times,
-appending the 16 last symbols to the 64 already output during S_IFFT2FIFO.
-During S_RECYCLE16 the FSM redirects the output of the FIFO to ans_ht_ltf (the module output)
-   
-From S_RECYCLE16 the FSM transits back to S_IDLE, concluding the lifecycle of this module.
-
-NB: while the FSM evolution is coded in the main always @(posedge clk) block of this module,
-the manipulation/redirection of input/output signals is coded exploiting continuous assignment statements,
-these latter are written right below the main ''always'' block.
-*/
 
 module ans_ht_ltf_generator(
     input wire clk, reset, letsgo, givemeoutput,
@@ -190,7 +102,6 @@ case(stateX)
             stateX <= S_IFFT2FIFO;
         end
      end
-        
 
     S_IFFT2FIFO: begin
         if (progress_cnt < 1) begin
