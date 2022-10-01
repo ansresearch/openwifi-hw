@@ -151,9 +151,16 @@ l_stf_rom l_stf_rom (
     .dout(l_stf_notAtt)
 );
 
+wire [23:0] stfCoeff;
+
+assign stfCoeff = {mask[9:8], mask[17:16], mask[25:24],
+mask[33:32], mask[41:40], mask[49:48], mask[81:80], mask[89:88],
+mask[97:96], mask[105:104], mask[113:112], mask[121:120]};
+
 wire [31:0] ans_l_stf;
 ans_l_stf_gen l_stf_gen (
-    .addr(preamble_addr % 16),
+    .addr(preamble_addr[3:0]),
+    .coeffs(stfCoeff),
     .symbol(ans_l_stf));
 
 wire [31:0] l_stf;

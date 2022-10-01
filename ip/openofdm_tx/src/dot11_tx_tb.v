@@ -29,7 +29,7 @@ initial begin
     //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte100.mem", Memory);
     //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte8176.mem", Memory);
     //$readmemh("../../../../../unit_test/test_vec/zz_bramtest_mcs4_byte100.mem", Memory);
-    $readmemh("../../../../../unit_test/test_vec/test_mcs5_len100byte_nosgi.mem", Memory);
+    $readmemh("../../../../../unit_test/test_vec/test_mcs3_len100byte_nosgi.mem", Memory);
     
     result_fd = $fopen("/home/xilinx/LORENZO/dot11_txANS.txt", "w");
     
@@ -144,13 +144,16 @@ dot11_tx dot11_tx_inst (
     .result_i(result_i),
     .result_q(result_q),
     
+    // msb is left part of the spectrum, lsb right part (left is negative freqs, right is positive freqs)
     .mask(128'd0) // No Obf
     //.mask(128'h55555555555555555555555555555555) // 01 on all subcar => means divide by 8
     //.mask(128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) // 10 on all subcar => means divide by 2
     //.mask(128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF) // 11 on all subcar => means divide by 4
     //.mask(128'hE4E4E4E4E4E4E4E4E4E4E4E4E4E4E4E4) //11_10_01_00 repeated pattern 
     //.mask(128'hFFFFFF) //only 4 carriers obfuscated
-    
+    //.mask(128'h03030303030303030303030303030300)
+    //.mask(128'h01030103010301030103010301030100)
+    //.mask(128'h00000000000000000103010301030100)
     // Other examples of possible mask values
     //.mask(128'hAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA)
     //.mask(128'h0000000000000000FFFFFFFFFFFFFFFF)

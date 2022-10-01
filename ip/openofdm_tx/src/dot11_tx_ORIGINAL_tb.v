@@ -28,8 +28,8 @@ initial begin
       //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte8176.mem", Memory);
       //$readmemh("../../../../../unit_test/test_vec/zz_bramtest_mcs4_byte100.mem", Memory);
       //$readmemh("../../../../../unit_test/test_vec/bramcazzo.mem", Memory);
+      //$readmemh("../../../../../unit_test/test_vec/test_mcs3_len100byte_nosgi.mem", Memory);    
       $readmemh("../../../../../unit_test/test_vec/test_mcs3_len100byte_nosgi.mem", Memory);
-
     result_fd = $fopen("/home/xilinx/LORENZO/dot11_tx.txt", "w");
 
     clock = 0;

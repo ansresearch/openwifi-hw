@@ -5,12 +5,13 @@ module ans_l_stf_tb;
 reg clock;
 reg [7:0]   index;
 wire [31:0] symbol;
+reg [23:0] coeffs;
 
-wire [3:0] romaddr;
 
-assign romaddr = index % 16;
-
-ans_l_stf_gen UUT (.addr(romaddr), .symbol(symbol));
+ans_l_stf_gen UUT (
+ .addr(index[3:0]),
+ .coeffs(coeffs),
+ .symbol(symbol));
 
 integer outfile;
 
@@ -18,6 +19,10 @@ initial begin
     $dumpfile("ans_l_stf.vcd");
     $dumpvars;
     outfile=$fopen("/home/xilinx/LORENZO/ans_lstf_out.txt","w");
+    
+    coeffs = 24'd0; // no obf
+    coeffs = 24'hAAAAAA; // div by 2
+    //coeffs = 24'hFFFFFF; // 
     
     clock = 0;
     index = 0;
