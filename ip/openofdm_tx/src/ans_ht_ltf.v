@@ -1,9 +1,8 @@
 
 
-module ans_ht_ltf_generator(
-    input wire clk, reset, letsgo, givemeoutput,
-    input [127:0] obf_coeff,
-    output wire[31:0] ans_ht_ltf, wire ans_ht_ltf_started 
+module ans_ht_ltf_gen(
+    input wire clk, reset, boot, output_enabled,
+    input [127:0] obf_coeff, output wire[31:0] ans_ht_ltf 
 );
 
 // states of the ans_ht_ltf_gen FSM
@@ -11,16 +10,16 @@ reg[2:0] stateX = 0;
 localparam S_IDLE              = 0;
 localparam S_LOADING           = 1;
 localparam S_WAITIFFT          = 2;
-localparam S_WAITREADY4OUT     = 3;
-localparam S_IFFT2FIFO         = 4;
-localparam S_RECYCLE16         = 5;
+localparam S_BUFFERING         = 3;
+localparam S_EMITTING          = 4;
+
+reg [31:0] Memory [63:0];
 
 // Wiring with our custom ans_ht_ltf_rom
 wire [31:0] ht_ltf_freqrom;
 wire [31:0] ans_ht_ltf_shifted;
 reg[6:0] progress_cnt;
 
-reg [31:0] tmpOutput;
 
 ans_ht_ltf_rom freqROM (.addr(progress_cnt), .dout(ht_ltf_freqrom));
 
@@ -40,17 +39,6 @@ wire ifft_osync;
 ifftmain ourIfftBlock (.i_clk(clk), .i_reset(reset), .i_ce(ifft_ce),
  .i_sample(ifft_input),  .o_result(ifft_result), .o_sync(ifft_osync));
 
-// Our FIFO BRAM
-wire [31:0] fifo_idata,  fifo_odata;
-wire        fifo_ivalid, fifo_ovalid;
-wire        fifo_iready, fifo_oready;
-wire [15:0] fifo_space;
- 
-axi_fifo_bram #(.WIDTH(32), .SIZE(11)) ourFIFO(.clk(clk), .reset(reset), .clear(reset),
- .i_tdata(fifo_idata), .i_tvalid(fifo_ivalid), .i_tready(fifo_iready),
- .o_tdata(fifo_odata), .o_tvalid(fifo_ovalid), .o_tready(fifo_oready),
- .space(fifo_space), .occupied()
-);
 
 //////////////////////////////////////////////////////////////////////////
 // HT-LTF generator FINITE STATE MACHINE
@@ -58,29 +46,23 @@ axi_fifo_bram #(.WIDTH(32), .SIZE(11)) ourFIFO(.clk(clk), .reset(reset), .clear(
 
 always @(posedge clk) begin
 if (reset) begin
-    /*
-    Reset everyting and go in patient S_IDLE state.
-    NB: This reset signal propagates also to the IFFT.reset and to the ourFIFO.reset;
-    so in theory after this module reset here our private IFFT and FIFO instances are clean.
-    */
     ifft_ce = 0;
     progress_cnt = 0;
-    stateX <= S_IDLE; 
+    stateX <= S_IDLE;
+    //TODO clear Memory
 end else begin
 case(stateX)
     S_IDLE: begin
-        if(letsgo) begin
+        if(boot) begin
             ifft_ce <= 1;
             progress_cnt = 0;
-            tmpOutput = 32'bx;
             stateX <= S_LOADING;
         end
     end    
     
     S_LOADING: begin
+        //$display("[%0t]: LOADING %H", $time, ifft_input);
         if (progress_cnt < 63) begin
-            //continuous assign takes care of
-            //passing ROM content as input to IFFT block
             progress_cnt <= progress_cnt + 1;
         end else begin
         progress_cnt <= 0;
@@ -90,45 +72,40 @@ case(stateX)
     
     S_WAITIFFT: begin
         if (ifft_osync) begin
-            ifft_ce <= 0;
-            tmpOutput <= ifft_result;
-            stateX <= S_WAITREADY4OUT;
+            //$display("[%0t]: MEM[%d] %H", $time, 0, ifft_result);
+            stateX <= S_BUFFERING;
+            Memory[0] = ifft_result;
+            progress_cnt <= 1;
         end
     end
     
-     S_WAITREADY4OUT: begin
-        if (givemeoutput) begin
+     S_BUFFERING: begin
+        if (progress_cnt < 64) begin
+            //$display("[%0t]: Mem[%d] %H", $time, progress_cnt, ifft_result);
+            Memory[progress_cnt] = ifft_result;
+            progress_cnt <= progress_cnt + 1;
+        end else begin
             progress_cnt <= 0;
-            stateX <= S_IFFT2FIFO;
+            ifft_ce <= 0;
+            stateX <= S_EMITTING;
         end
      end
 
-    S_IFFT2FIFO: begin
-        if (progress_cnt < 1) begin
-             ifft_ce <= 1; // enable progress of output
-        end
-        if (progress_cnt < 63) begin       
-            progress_cnt <= progress_cnt + 1;
-        end else begin
-            progress_cnt <= 0;
-            stateX = S_RECYCLE16;
-        end
+    S_EMITTING: begin
+        // do nothing if dot11 did not ask for output yet
+        if (output_enabled) begin
+            if (progress_cnt < 80) begin
+                //$display("[%0t]: -> Mem[%d] %H (%d)", $time, progress_cnt[5:0], Memory[progress_cnt[5:0]], progress_cnt);
+                progress_cnt <= progress_cnt + 1;
+            end else begin
+                progress_cnt <= 0;
+                stateX <= S_IDLE;
+                //TODO clear Memory  
+            end
+        end       
     end
-    
-    S_RECYCLE16: begin
-        if (progress_cnt < 16) begin
-            // Redirect FIFO output in FIFO input for 16 time, so to generate HT-LTF sequence...
-            progress_cnt <= progress_cnt + 1;
-        end else begin
-        //IT'S OVER! Reset & Go back IDLE :)
-        ifft_ce = 0;    
-        progress_cnt = 0;
-        stateX <= S_IDLE;
-        end  
-    end    
     endcase 
-
-end
+  end
 
 end
 
@@ -148,33 +125,13 @@ assign ans_ht_ltf_shifted =
 (stateX == S_LOADING && curr_coeff == 2'b11) ? ht_ltf_DivBy4
  : 32'bx;
 
-
 //Provide shited coefficients as input to the IFFT only during LOADING state
 assign ifft_input = (stateX == S_LOADING) ? ans_ht_ltf_shifted : 32'bx;
 
-/* Accept input and set input for ourFIFO in 2 moments: 
-    1. when transition from S_WAITREADY4OUT to IFFT2FIFO (first sample)
-    2. During IFFT2FIFO (always redirect ifft_result to ourFIFO.input)
-*/
-assign fifo_ivalid = (stateX == S_IFFT2FIFO) ? 1 : 0;
-assign fifo_idata  = (stateX == S_IFFT2FIFO && progress_cnt < 1) ? tmpOutput :
-                     (stateX == S_IFFT2FIFO && progress_cnt > 0) ? ifft_result : 32'bx;
+wire output_in_progress;
+assign output_in_progress = (stateX == S_EMITTING && output_enabled) ? 1 : 0;
 
-// We are interested in the output of ourFIFO only during S_RECYCLE16, 
-// because during that state what comes out of the FIFO is used for building the LTF sequence
-// (and is also re-enqueued in the same FIFO for some time...) 
-assign fifo_oready = (stateX == S_RECYCLE16) ? 1 : 0;
-
-/* How we build the ht-ltf sequence output by this module? (NB: output goes on ans_ht_ltf)
-    1. With the first 64 symbols provided by ourIFFT (written in ifft_result) that we have available when o_sync is asserted and during S_IFFT2FIFO
-    2. The rest of the ht-ltf sequence is extracted from ourFIFO used as a circular buffer
-*/
-assign ans_ht_ltf = (stateX == S_IFFT2FIFO && progress_cnt < 1) ? tmpOutput :
-                    (stateX == S_IFFT2FIFO && progress_cnt > 0) ? ifft_result :
-                    (stateX == S_RECYCLE16) ? fifo_odata : 32'bx;
-
-//We raise this flag to let the FSM3 in dot11_tx.v module understand when it's time to subscribe to
-//the output coming out from this ltf_generator module
-assign ans_ht_ltf_started = (stateX == S_IFFT2FIFO) ? 1 : 0;
+//wire [6:0] memIndex = progress_cnt < 64 ? progress_cnt : progress_cnt - 16;
+assign ans_ht_ltf = (output_in_progress == 1) ? Memory[progress_cnt[5:0]] : 32'bx;
 
 endmodule

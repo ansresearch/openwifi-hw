@@ -17,7 +17,8 @@ wire        result_iq_valid;
 wire signed [15:0] result_i;
 wire signed [15:0] result_q;
 
-integer result_fd;//,f0,f1,f2;
+integer result_fd;
+integer f0,f1,f2,tmp;
 integer logfile;
 
 reg [63:0] Memory [0:4095];
@@ -29,13 +30,13 @@ initial begin
     //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte100.mem", Memory);
     //$readmemh("../../../../../unit_test/test_vec/ht_tx_intf_mem_mcs7_gi1_aggr0_byte8176.mem", Memory);
     //$readmemh("../../../../../unit_test/test_vec/zz_bramtest_mcs4_byte100.mem", Memory);
-    $readmemh("../../../../../unit_test/test_vec/test_mcs0_len100byte_nosgi.mem", Memory);
+    $readmemh("../../../../../unit_test/test_vec/test_mcs5_len100byte_nosgi.mem", Memory);
     
     result_fd = $fopen("/home/xilinx/LORENZO/dot11_txANS.txt", "w");
     
-//    f0 = $fopen("/home/xilinx/LORENZO/f0.txt", "w");
-//    f1 = $fopen("/home/xilinx/LORENZO/f1.txt", "w");
-//    f2 = $fopen("/home/xilinx/LORENZO/f2.txt", "w");
+    f0 = $fopen("/home/xilinx/LORENZO/f0.txt", "w");
+    f1 = $fopen("/home/xilinx/LORENZO/f1.txt", "w");
+    f2 = $fopen("/home/xilinx/LORENZO/f2.txt", "w");
     logfile = $fopen("/home/xilinx/LORENZO/logTBDOT11.txt");
 
     clock = 0;
@@ -43,7 +44,7 @@ initial begin
     reset = 1;
     phy_tx_start = 0;
 
-    //$fdisplay(logfile, "[%0t] COMINCIO\n", $time); 
+    $fdisplay(logfile, "[%0t] COMINCIO\n", $time); 
     // RUN 0
     # 20
     reset = 0;
@@ -51,30 +52,30 @@ initial begin
     # 25 
     phy_tx_start = 0;
     
-//    #10700 // Wait end of TX
-//    $fdisplay(logfile, "[%0t] RICOMINCIO\n", $time);
+    #10700 // Wait end of TX
+    $fdisplay(logfile, "[%0t] RICOMINCIO\n", $time);
     
-//    // RUN 1
-//    reset = 1;
-//    phy_tx_start = 0;
-//    # 20
-//    reset = 0;
-//    phy_tx_start = 1;
-//    # 25 
-//    phy_tx_start = 0;
+    // RUN 1
+    reset = 1;
+    phy_tx_start = 0;
+    # 20
+    reset = 0;
+    phy_tx_start = 1;
+    # 25 
+    phy_tx_start = 0;
     
-//     #10700 // Wait end of TX
-//     $fdisplay(logfile, "[%0t] RICOMINCIO\n", $time);
+     #10700 // Wait end of TX
+     $fdisplay(logfile, "[%0t] RICOMINCIO\n", $time);
      
-//     // RUN 2
-//    reset = 1;
-//    phy_tx_start = 0;
-//    # 20
-//    reset = 0;
-//    phy_tx_start = 1;
-//    # 25 
-//    phy_tx_start = 0;
-//     $fdisplay(logfile, "ASPETTO LA FINE\n");
+     // RUN 2
+    reset = 1;
+    phy_tx_start = 0;
+    # 20
+    reset = 0;
+    phy_tx_start = 1;
+    # 25 
+    phy_tx_start = 0;
+     $fdisplay(logfile, "ASPETTO LA FINE\n");
     
     
     
@@ -90,12 +91,12 @@ always @(posedge clock) begin
         bram_din <= 0;
     else begin
         if (result_iq_valid) begin
-//            case (txcnt)
-//                0: $fwrite(f0, "%d %d\n", result_i, result_q);
-//                1: $fwrite(f1, "%d %d\n", result_i, result_q);
-//                2: $fwrite(f2, "%d %d\n", result_i, result_q);
-//                default: tmp = result_fd;
-//            endcase
+            case (txcnt)
+                0: $fwrite(f0, "%d %d\n", result_i, result_q);
+                1: $fwrite(f1, "%d %d\n", result_i, result_q);
+                2: $fwrite(f2, "%d %d\n", result_i, result_q);
+                default: tmp = result_fd;
+            endcase
             $fwrite(result_fd, "%d %d\n", result_i, result_q);
             $display("[%0t]: i:%d q:%d TX=%d", $time, result_i, result_q, txcnt);
             $fdisplay(logfile, "[%0t]: i:%d q:%d TX=%d", $time, result_i, result_q, txcnt);
@@ -108,20 +109,20 @@ always @(posedge clock) begin
             $display("[%0t]: END of #%d TRX", $time, txcnt);
             $fdisplay(logfile, "=========== [%0t]: END of TRX  #%d ===========", $time, txcnt);
             $fclose(result_fd);
-            $finish;
+            //$finish;
             txcnt <= txcnt + 1;
             reset <= 1;          
         end
     end
     
-//    if (txcnt == 3) begin
-//        $fclose(f0);
-//        $fclose(f1);
-//        $fclose(f2);
-//        $display("END OF ALL TXs\n");
-//        $fdisplay(logfile, "=======\n");
-//        $finish;
-//    end
+    if (txcnt == 3) begin
+        $fclose(f0);
+        $fclose(f1);
+        $fclose(f2);
+        $display("END OF ALL TXs\n");
+        $fdisplay(logfile, "=======\n");
+        $finish;
+    end
 
 end
 
