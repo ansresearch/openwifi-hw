@@ -1,4 +1,4 @@
-module l_stf_rom14
+module stf_rom14
 (
   input		[3:0]	addr,
   output reg	[31:0]	dout

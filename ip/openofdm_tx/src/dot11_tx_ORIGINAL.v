@@ -99,6 +99,7 @@ l_ltf_rom l_ltf_rom (
 //////////////////////////////////////////////////////////////////////////
 wire [31:0] ht_stf;
 wire [31:0] ht_ltf;
+
 ht_stf_rom ht_stf_rom (
     .addr(preamble_addr[3:0]),
     .dout(ht_stf)
@@ -823,8 +824,19 @@ end else if(result_iq_ready == 1) begin
     endcase
 end
 
-assign result_i        = state3 == S3_L_STF ? l_stf[31:16] : (state3 == S3_L_LTF ? l_ltf[31:16] : (state3 == S3_HT_STF ? ht_stf[31:16] : (state3 == S3_HT_LTF ? ht_ltf[31:16] : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[31:16] : CP_fifo_odata[31:16]))));
-assign result_q        = state3 == S3_L_STF ? l_stf[15:0]  : (state3 == S3_L_LTF ? l_ltf[15:0]  : (state3 == S3_HT_STF ? ht_stf[15:0]  : (state3 == S3_HT_LTF ? ht_ltf[15:0]  : (fifo_turn == PKT_FIFO ? pkt_fifo_odata[15:0]  : CP_fifo_odata[15:0]))));
-assign result_iq_valid = state3 == S3_L_STF || state3 == S3_L_LTF || state3 == S3_HT_STF || state3 == S3_HT_LTF ? 1 : (fifo_turn == PKT_FIFO ? pkt_fifo_ovalid : CP_fifo_ovalid);
+assign result_i        = state3 == S3_L_STF ? l_stf[31:16] :
+                        (state3 == S3_L_LTF ? l_ltf[31:16] :
+                        (state3 == S3_HT_STF ? ht_stf[31:16] :
+                        (state3 == S3_HT_LTF ? ht_ltf[31:16] :
+                        (fifo_turn == PKT_FIFO ? pkt_fifo_odata[31:16] : CP_fifo_odata[31:16]))));
+
+assign result_q        = state3 == S3_L_STF ? l_stf[15:0]  :
+                        (state3 == S3_L_LTF ? l_ltf[15:0]  :
+                        (state3 == S3_HT_STF ? ht_stf[15:0]  :
+                        (state3 == S3_HT_LTF ? ht_ltf[15:0]  :
+                        (fifo_turn == PKT_FIFO ? pkt_fifo_odata[15:0]  : CP_fifo_odata[15:0]))));
+
+assign result_iq_valid = state3 == S3_L_STF || state3 == S3_L_LTF || state3 == S3_HT_STF || state3 == S3_HT_LTF ? 1 :
+			 (fifo_turn == PKT_FIFO ? pkt_fifo_ovalid : CP_fifo_ovalid);
 
 endmodule

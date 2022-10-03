@@ -244,14 +244,10 @@ set files [list \
  "[file normalize "$origin_dir/src/ans_ht_ltf.v"]"\
  "[file normalize "$origin_dir/src/ans_ht_ltf_rom.v"]"\
  "[file normalize "$origin_dir/src/ans_ht_ltf_tb.v"]"\
- "[file normalize "$origin_dir/src/ans_ht_stf.v"]"\
- "[file normalize "$origin_dir/src/ans_ht_stf_rom.v"]"\
- "[file normalize "$origin_dir/src/ans_ht_stf_tb.v"]"\
+ "[file normalize "$origin_dir/src/ans_stf_gen.v"]"\
+ "[file normalize "$origin_dir/src/ans_stf_tb.v"]"\
  "[file normalize "$origin_dir/src/dot11_tx_ORIGINAL_tb.v"]"\
  "[file normalize "$origin_dir/src/dot11_tx_ORIGINAL.v"]"\
- "[file normalize "$origin_dir/src/l_stf_rom-attenuated3.v"]"\
-"[file normalize "$origin_dir/src/ans_l_stf_gen.v"]"\
- "[file normalize "$origin_dir/src/ans_l_stf_tb.v"]"\
  "[file normalize "$origin_dir/src/ans_adder.v"]"\
  "[file normalize "$origin_dir/src/rom1.v"]"\
  "[file normalize "$origin_dir/src/rom2.v"]"\
@@ -645,20 +641,16 @@ set_property -name "used_in_simulation" -value "1" -objects $file_obj
 set_property -name "used_in_synthesis" -value "1" -objects $file_obj
 
 # ANS added some verilog sources
-#  "[file normalize "$origin_dir/src/custom_LTFphased_rom.v"]"
-#  "[file normalize "$origin_dir/src/ltf_generator.v"]"
-#  "[file normalize "$origin_dir/src/ltf_generator_tb.v"]"
+# custom_LTFphased_rom.v
+# ltf_generator.v
+# ltf_generator_tb.v
 # ans_ht_ltf.v
 # ans_ht_ltf_rom.v
 # ans_ht_ltf_tb.v
-# ans_ht_stf.v
-# ans_ht_stf_rom.v
-# ans_ht_stf_tb.v
 # dot11_tx_ORIGINAL_tb.v
 # dot11_tx_ORIGINAL.v
-# l_stf_rom-attenuated3.v
-# ans_l_stf_gen.v
-# ans_l_stf_tb.v
+# ans_stf_gen.v
+# ans_stf_tb.v
 # ans_adder.v
 # rom1.v
 # rom2.v
@@ -687,7 +679,7 @@ set_property -name "used_in_implementation" -value "1" -objects $file_obj
 set_property -name "used_in_simulation" -value "1" -objects $file_obj
 set_property -name "used_in_synthesis" -value "1" -objects $file_obj
 
-set file "$origin_dir/src/ans_l_stf_gen.v"
+set file "$origin_dir/src/ans_stf_gen.v"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "Verilog" -objects $file_obj
@@ -700,7 +692,7 @@ set_property -name "used_in_implementation" -value "1" -objects $file_obj
 set_property -name "used_in_simulation" -value "1" -objects $file_obj
 set_property -name "used_in_synthesis" -value "1" -objects $file_obj
 
-set file "$origin_dir/src/ans_l_stf_tb.v"
+set file "$origin_dir/src/ans_stf_tb.v"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "Verilog" -objects $file_obj
@@ -883,19 +875,6 @@ set_property -name "used_in_simulation" -value "1" -objects $file_obj
 set_property -name "used_in_synthesis" -value "1" -objects $file_obj
 
 
-set file "$origin_dir/src/l_stf_rom-attenuated3.v"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "Verilog" -objects $file_obj
-set_property -name "is_enabled" -value "1" -objects $file_obj
-set_property -name "is_global_include" -value "0" -objects $file_obj
-set_property -name "library" -value "xil_defaultlib" -objects $file_obj
-set_property -name "path_mode" -value "RelativeFirst" -objects $file_obj
-set_property -name "used_in" -value "synthesis implementation simulation" -objects $file_obj
-set_property -name "used_in_implementation" -value "1" -objects $file_obj
-set_property -name "used_in_simulation" -value "1" -objects $file_obj
-set_property -name "used_in_synthesis" -value "1" -objects $file_obj
-
 set file "$origin_dir/src/dot11_tx_ORIGINAL_tb.v"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
@@ -949,45 +928,6 @@ set_property -name "used_in_simulation" -value "1" -objects $file_obj
 set_property -name "used_in_synthesis" -value "1" -objects $file_obj
 
 set file "$origin_dir/src/ans_ht_ltf.v"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "Verilog" -objects $file_obj
-set_property -name "is_enabled" -value "1" -objects $file_obj
-set_property -name "is_global_include" -value "0" -objects $file_obj
-set_property -name "library" -value "xil_defaultlib" -objects $file_obj
-set_property -name "path_mode" -value "RelativeFirst" -objects $file_obj
-set_property -name "used_in" -value "synthesis implementation simulation" -objects $file_obj
-set_property -name "used_in_implementation" -value "1" -objects $file_obj
-set_property -name "used_in_simulation" -value "1" -objects $file_obj
-set_property -name "used_in_synthesis" -value "1" -objects $file_obj
-
-set file "$origin_dir/src/ans_ht_stf.v"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "Verilog" -objects $file_obj
-set_property -name "is_enabled" -value "1" -objects $file_obj
-set_property -name "is_global_include" -value "0" -objects $file_obj
-set_property -name "library" -value "xil_defaultlib" -objects $file_obj
-set_property -name "path_mode" -value "RelativeFirst" -objects $file_obj
-set_property -name "used_in" -value "synthesis implementation simulation" -objects $file_obj
-set_property -name "used_in_implementation" -value "1" -objects $file_obj
-set_property -name "used_in_simulation" -value "1" -objects $file_obj
-set_property -name "used_in_synthesis" -value "1" -objects $file_obj
-
-set file "$origin_dir/src/ans_ht_stf_tb.v"
-set file [file normalize $file]
-set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
-set_property -name "file_type" -value "Verilog" -objects $file_obj
-set_property -name "is_enabled" -value "1" -objects $file_obj
-set_property -name "is_global_include" -value "0" -objects $file_obj
-set_property -name "library" -value "xil_defaultlib" -objects $file_obj
-set_property -name "path_mode" -value "RelativeFirst" -objects $file_obj
-set_property -name "used_in" -value "synthesis implementation simulation" -objects $file_obj
-set_property -name "used_in_implementation" -value "1" -objects $file_obj
-set_property -name "used_in_simulation" -value "1" -objects $file_obj
-set_property -name "used_in_synthesis" -value "1" -objects $file_obj
-
-set file "$origin_dir/src/ans_ht_stf_rom.v"
 set file [file normalize $file]
 set file_obj [get_files -of_objects [get_filesets sources_1] [list "*$file"]]
 set_property -name "file_type" -value "Verilog" -objects $file_obj

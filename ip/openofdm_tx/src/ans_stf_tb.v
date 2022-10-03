@@ -1,6 +1,6 @@
 `timescale 1ns / 1ps
 
-module ans_l_stf_tb;
+module ans_stf_tb;
 
 reg clock;
 reg [7:0]   index;
@@ -8,7 +8,7 @@ wire [31:0] symbol;
 reg [23:0] coeffs;
 
 
-ans_l_stf_gen UUT (
+stf_gen UUT (
  .addr(index[3:0]),
  .coeffs(coeffs),
  .symbol(symbol));
@@ -16,9 +16,9 @@ ans_l_stf_gen UUT (
 integer outfile;
 
 initial begin
-    $dumpfile("ans_l_stf.vcd");
+    $dumpfile("ans_stf.vcd");
     $dumpvars;
-    outfile=$fopen("/home/xilinx/LORENZO/ans_lstf_out.txt","w");
+    outfile=$fopen("/home/xilinx/LORENZO/ans_stf_out.txt","w");
     
     coeffs = 24'd0; // no obf
     coeffs = 24'hAAAAAA; // div by 2

@@ -1,6 +1,6 @@
 
 
-module ans_l_stf_gen
+module stf_gen
 (
     input wire [3:0] addr,
     input wire [23:0] coeffs,
@@ -26,19 +26,19 @@ module ans_l_stf_gen
     wire [31:0] r1_out, r2_out, r3_out, r4_out, r5_out, r6_out,
      r10_out, r11_out, r12_out, r13_out, r14_out, r15_out;
     
-    l_stf_rom1 rom1   (.addr(addr), .dout(r1_out));
-    l_stf_rom2 rom2   (.addr(addr), .dout(r2_out));
-    l_stf_rom3 rom3   (.addr(addr), .dout(r3_out));
-    l_stf_rom4 rom4   (.addr(addr), .dout(r4_out));
-    l_stf_rom5 rom5   (.addr(addr), .dout(r5_out));
-    l_stf_rom6 rom6   (.addr(addr), .dout(r6_out));
+    stf_rom1 rom1   (.addr(addr), .dout(r1_out));
+    stf_rom2 rom2   (.addr(addr), .dout(r2_out));
+    stf_rom3 rom3   (.addr(addr), .dout(r3_out));
+    stf_rom4 rom4   (.addr(addr), .dout(r4_out));
+    stf_rom5 rom5   (.addr(addr), .dout(r5_out));
+    stf_rom6 rom6   (.addr(addr), .dout(r6_out));
 
-    l_stf_rom10 rom10 (.addr(addr), .dout(r10_out));
-    l_stf_rom11 rom11 (.addr(addr), .dout(r11_out));
-    l_stf_rom12 rom12 (.addr(addr), .dout(r12_out));
-    l_stf_rom13 rom13 (.addr(addr), .dout(r13_out));
-    l_stf_rom14 rom14 (.addr(addr), .dout(r14_out));
-    l_stf_rom15 rom15 (.addr(addr), .dout(r15_out));
+    stf_rom10 rom10 (.addr(addr), .dout(r10_out));
+    stf_rom11 rom11 (.addr(addr), .dout(r11_out));
+    stf_rom12 rom12 (.addr(addr), .dout(r12_out));
+    stf_rom13 rom13 (.addr(addr), .dout(r13_out));
+    stf_rom14 rom14 (.addr(addr), .dout(r14_out));
+    stf_rom15 rom15 (.addr(addr), .dout(r15_out));
     
     // Splitting i/q parts of roms content
     wire [15:0] rom1_i, rom2_i, rom3_i, rom4_i, rom5_i,

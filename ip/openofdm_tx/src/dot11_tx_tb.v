@@ -17,8 +17,8 @@ wire        result_iq_valid;
 wire signed [15:0] result_i;
 wire signed [15:0] result_q;
 
-integer result_fd,f0,f1,f2;
-integer tmp,logfile;
+integer result_fd;//,f0,f1,f2;
+integer logfile;
 
 reg [63:0] Memory [0:4095];
 initial begin
@@ -114,14 +114,14 @@ always @(posedge clock) begin
         end
     end
     
-    if (txcnt == 3) begin
-        $fclose(f0);
-        $fclose(f1);
-        $fclose(f2);
-        $display("END OF ALL TXs\n");
-        $fdisplay(logfile, "=======\n");
-        $finish;
-    end
+//    if (txcnt == 3) begin
+//        $fclose(f0);
+//        $fclose(f1);
+//        $fclose(f2);
+//        $display("END OF ALL TXs\n");
+//        $fdisplay(logfile, "=======\n");
+//        $finish;
+//    end
 
 end
 
