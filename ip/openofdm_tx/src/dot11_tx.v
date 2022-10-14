@@ -79,6 +79,8 @@ reg [3:0]  service_bit_cnt;
 reg [18:0] psdu_bit_cnt;        // Maximum number of PSDU bits = 65536*8 = 524288
 reg [14:0] ofdm_cnt_FSM1;       // Maximum number of OFDM symbols = 3 + ceil((16+524288+6)/26) = 20169
 
+
+reg [127:0] frozenMask;
 //////////////////////////////////////////////////////////////////////////
 // LEGACY SHORT + LONG PREAMBLE
 //////////////////////////////////////////////////////////////////////////
@@ -87,9 +89,9 @@ wire [31:0] l_ltf;
 reg  [7:0] preamble_addr;
 
 wire [23:0] stfCoeff;
-assign stfCoeff = {mask[9:8], mask[17:16], mask[25:24],
-mask[33:32], mask[41:40], mask[49:48], mask[81:80], mask[89:88],
-mask[97:96], mask[105:104], mask[113:112], mask[121:120]};
+assign stfCoeff = {frozenMask[9:8], frozenMask[17:16], frozenMask[25:24],
+frozenMask[33:32], frozenMask[41:40], frozenMask[49:48], frozenMask[81:80], frozenMask[89:88],
+frozenMask[97:96], frozenMask[105:104], frozenMask[113:112], frozenMask[121:120]};
 
 stf_gen l_stf_gen (
     .addr(preamble_addr[3:0]),
@@ -105,7 +107,7 @@ wire ans_LTF_valid;
 
 ltf_generator ltf_gen (
     .clk(clk), .reset(reset_int), .letsgo(ltf_start),
-    .coefficients(mask),
+    .coefficients(frozenMask),
     .ltfsequence(ans_l_ltf), .LTFstarted(LTFstarted));
 
 //////////////////////////////////////////////////////////////////////////
@@ -130,7 +132,7 @@ reg ht_ltf_start;
 ans_ht_ltf_gen ht_ltf_gen (
 .clk(clk), .reset(reset_int), .boot(ht_ltf_start),
 .addr(preamble_addr[6:0]),
-.obf_coeff(mask), .ans_ht_ltf(ht_ltf));
+.obf_coeff(frozenMask), .ans_ht_ltf(ht_ltf));
 
 //////////////////////////////////////////////////////////////////////////
 // Cyclic redundancy check (CRC32) and frame check sequence (FCS) block
@@ -506,7 +508,7 @@ always @* begin
     end
 end
 
-assign curr_coeff = mask[(iq_cnt * 2) +: 2];
+assign curr_coeff = frozenMask[(iq_cnt * 2) +: 2];
 assign iq_DivBy2 = {ifft_iq[31], ifft_iq[31:17], ifft_iq[15], ifft_iq[15:1]};
 assign iq_DivBy4 = {ifft_iq[31], ifft_iq[31], ifft_iq[31:18], ifft_iq[15], ifft_iq[15], ifft_iq[15:2]};
 assign iq_DivBy8 = {ifft_iq[31], ifft_iq[31], ifft_iq[31], ifft_iq[31:19], ifft_iq[15], ifft_iq[15], ifft_iq[15], ifft_iq[15:3]};
@@ -797,6 +799,8 @@ end else if(result_iq_ready == 1) begin
             ltf_start <= 1;
             ht_ltf_start <= 1;
             ans_LTFoutput_in_progress <= 0;
+            // Freeze the mask during this Transmission!
+            frozenMask <= mask;
         end
     end
 
