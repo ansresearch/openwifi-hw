@@ -7,7 +7,6 @@
 
 `include "openofdm_tx_pre_def.v"
 
-
 module dot11_tx
 (
   input  wire        clk,
@@ -119,11 +118,18 @@ stf_gen ht_stf_gen (
     .addr(preamble_addr[3:0]),
     .coeffs(stfCoeff), .symbol(ht_stf));
 
+//ht_ltf_rom ht_ltf_rom (
+//    .addr(preamble_addr[6:0]),
+//    .dout(ht_ltf)
+//);
+//////////////////////////////////////////////////////////////////////////
+// ANS HT-LTF
+//////////////////////////////////////////////////////////////////////////
 reg ht_ltf_start;
-reg ht_ltf_startOut;
 
 ans_ht_ltf_gen ht_ltf_gen (
-.clk(clk), .reset(reset_int), .boot(ht_ltf_start), .output_enabled(ht_ltf_startOut),
+.clk(clk), .reset(reset_int), .boot(ht_ltf_start),
+.addr(preamble_addr[6:0]),
 .obf_coeff(mask), .ans_ht_ltf(ht_ltf));
 
 //////////////////////////////////////////////////////////////////////////
@@ -778,9 +784,7 @@ if (reset_int) begin
     preamble_addr <= 0;
     phy_tx_done <= 0;
     FSM3_reset <= 0;
-    
-    ht_ltf_startOut <= 0;
-    
+
     state3 <= S3_WAIT_PKT;
 
 end else if(result_iq_ready == 1) begin
@@ -789,7 +793,7 @@ end else if(result_iq_ready == 1) begin
         if(phy_tx_start) begin
             preamble_addr <= 0;
             state3 <= S3_L_STF;
-            //LET ALSO FSM4 START RUNNING 
+            //LET ALSO ANS FSMs START RUNNING 
             ltf_start <= 1;
             ht_ltf_start <= 1;
             ans_LTFoutput_in_progress <= 0;
@@ -797,6 +801,9 @@ end else if(result_iq_ready == 1) begin
     end
 
     S3_L_STF: begin
+        // TURN OFF BOOT SIGNAL OF HT-LTFgen otherwise it keeps rebooting
+        // when in IDLE state
+        ht_ltf_start <= 0;
         // Legacy short preamble contains 10*16 = 160 samples
         if(preamble_addr < 159) begin
             ltf_start <= 0;
@@ -852,9 +859,7 @@ end else if(result_iq_ready == 1) begin
         if(preamble_addr < 79) begin
             preamble_addr <= preamble_addr + 1;
         end else begin
-            // switch to HT_LTF and ask output to ht_stf_gen!
             preamble_addr <= 0;
-            ht_ltf_startOut <= 1;
             state3 <= S3_HT_LTF;
         end
     end
@@ -863,6 +868,7 @@ end else if(result_iq_ready == 1) begin
         // HT long preamble contains 80 samples
         if(preamble_addr < 79) begin
             preamble_addr <= preamble_addr + 1;
+
         end else begin
             state3 <= S3_DATA;
         end

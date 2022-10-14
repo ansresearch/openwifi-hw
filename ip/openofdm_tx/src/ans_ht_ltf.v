@@ -1,7 +1,8 @@
 
 
 module ans_ht_ltf_gen(
-    input wire clk, reset, boot, output_enabled,
+    input wire clk, reset, boot,
+    input [6:0]  addr,
     input [127:0] obf_coeff, output wire[31:0] ans_ht_ltf 
 );
 
@@ -11,9 +12,9 @@ localparam S_IDLE              = 0;
 localparam S_LOADING           = 1;
 localparam S_WAITIFFT          = 2;
 localparam S_BUFFERING         = 3;
-localparam S_EMITTING          = 4;
 
 reg [31:0] Memory [63:0];
+reg buffer_ready_for_read;
 
 // Wiring with our custom ans_ht_ltf_rom
 wire [31:0] ht_ltf_freqrom;
@@ -46,10 +47,12 @@ ifftmain ourIfftBlock (.i_clk(clk), .i_reset(reset), .i_ce(ifft_ce),
 
 always @(posedge clk) begin
 if (reset) begin
-    ifft_ce = 0;
-    progress_cnt = 0;
+    ifft_ce <= 0;
+    progress_cnt <= 0;
+    //$readmemh("./x.mem", Memory); //clear memory
+    buffer_ready_for_read <= 0;
     stateX <= S_IDLE;
-    //TODO clear Memory
+   
 end else begin
 case(stateX)
     S_IDLE: begin
@@ -75,6 +78,7 @@ case(stateX)
             //$display("[%0t]: MEM[%d] %H", $time, 0, ifft_result);
             stateX <= S_BUFFERING;
             Memory[0] = ifft_result;
+            buffer_ready_for_read <= 1;
             progress_cnt <= 1;
         end
     end
@@ -87,23 +91,10 @@ case(stateX)
         end else begin
             progress_cnt <= 0;
             ifft_ce <= 0;
-            stateX <= S_EMITTING;
+            stateX <= S_IDLE;
         end
      end
 
-    S_EMITTING: begin
-        // do nothing if dot11 did not ask for output yet
-        if (output_enabled) begin
-            if (progress_cnt < 80) begin
-                //$display("[%0t]: -> Mem[%d] %H (%d)", $time, progress_cnt[5:0], Memory[progress_cnt[5:0]], progress_cnt);
-                progress_cnt <= progress_cnt + 1;
-            end else begin
-                progress_cnt <= 0;
-                stateX <= S_IDLE;
-                //TODO clear Memory  
-            end
-        end       
-    end
     endcase 
   end
 
@@ -128,10 +119,8 @@ assign ans_ht_ltf_shifted =
 //Provide shited coefficients as input to the IFFT only during LOADING state
 assign ifft_input = (stateX == S_LOADING) ? ans_ht_ltf_shifted : 32'bx;
 
-wire output_in_progress;
-assign output_in_progress = (stateX == S_EMITTING && output_enabled) ? 1 : 0;
 
 //wire [6:0] memIndex = progress_cnt < 64 ? progress_cnt : progress_cnt - 16;
-assign ans_ht_ltf = (output_in_progress == 1) ? Memory[progress_cnt[5:0]] : 32'bx;
+assign ans_ht_ltf = Memory[addr[5:0]];
 
 endmodule

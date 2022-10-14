@@ -9,23 +9,23 @@ module ht_ltf_tb;
     wire LTFstarted;
     reg  [127:0] mycoefficients;
     
-    reg [7:0] outputlength;
-    reg readyforoutput;
+    reg [7:0] preamble_addr;
     reg outputinprogress;
     
     reg [2:0] txcnt;
 
 ans_ht_ltf_gen UUT (.clk(clk), .reset(reset), .boot(boot),
-.output_enabled(readyforoutput), .obf_coeff(mycoefficients), .ans_ht_ltf(exportToDot11));
+.addr(preamble_addr[6:0]),
+.obf_coeff(mycoefficients), .ans_ht_ltf(exportToDot11));
 
     integer logfile,outfile;
     
 always begin //200MHz
         #2.5 clk = !clk;
 end
-    
-   
-initial begin
+
+
+initial begin    
     $dumpfile("ht_ltf_gen.vcd");
     $dumpvars;
     
@@ -35,8 +35,8 @@ initial begin
     logfile=$fopen("/home/xilinx/LORENZO/ht_ltf_log.txt","w");
     outfile=$fopen("/home/xilinx/LORENZO/ht_ltf_out.txt","w");
     
-    outputlength = 0;
-    readyforoutput = 0;
+    preamble_addr = 0;
+   
     outputinprogress = 0;
     
     //mycoefficients = 128'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF; //128bit set to 1
@@ -53,7 +53,7 @@ initial begin
     
     #1700;
     
-    readyforoutput = 1;
+    outputinprogress = 1;
     
 ////    //RUN 1
 //    $fdisplay(logfile, "[%0t]: START RUN 1", $time);
@@ -85,18 +85,18 @@ end
 
 always @(posedge clk) begin
 
-    if (readyforoutput)
-        outputinprogress <= 1;
+    if (outputinprogress)
+        preamble_addr <= preamble_addr + 1;
         
-    if (outputinprogress && outputlength < 80) 
+    if (outputinprogress && preamble_addr < 80) 
     begin
-        //$display("[%0t]: Sample #%d equal to %H from ht_ltf_gen", $time, outputlength, exportToDot11);
-        $fdisplay(logfile, "[%0t]: Sample #%d equal to %H from ht_ltf_gen", $time, outputlength, exportToDot11);
+        $display("[%0t]: Sample #%d equal to %H from ht_ltf_gen", $time, preamble_addr, exportToDot11);
+        
+        $fdisplay(logfile, "[%0t]: Sample #%d equal to %H from ht_ltf_gen", $time, preamble_addr, exportToDot11);
         $fdisplay(outfile, "%H", exportToDot11);
-        outputlength <= outputlength + 1;
     end
     
-    if (outputlength == 80) 
+    if (preamble_addr == 80) 
     begin
         //GOOD POINT FOR RESET
         //reset = 1;
